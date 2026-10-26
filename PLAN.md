@@ -20,6 +20,7 @@ We're building an Agent Skill, `yt-research/`, that lets Claude Code and Cowork 
    - Metadata comes from `videos.list` (cloud) or yt-dlp (local). Chapters come from yt-dlp or from the timestamps in the description.
    - Transcript language order: the `--lang` languages, then the original language. Auto-generated captions are preferred over creator-made ones where the backend allows it.
    - The transcript is plain text. The output includes the language, whether it's auto-generated, and `source`.
+   - Transcript order: Supadata first, then youtube-transcript-api (through `YT_PROXY` if set) if Supadata fails, is out of credits or has no key. If both fail, return a clear error.
    - Supadata is called with existing captions only, so a missing transcript never burns AI-generation credits unless `--ai-transcript` is passed.
 5. **Map every failure to a clear error code:** `NO_CAPTIONS`, `PRIVATE_OR_UNAVAILABLE`, `NOT_FOUND`, `RATE_LIMITED`, `IP_BLOCKED`, `QUOTA_EXCEEDED`, `BAD_API_KEY`, `MISSING_DEPENDENCY`. Each message says what to do next.
 6. **Write `SKILL.md` and `README.md`.**
