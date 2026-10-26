@@ -6,7 +6,7 @@ We're building an Agent Skill, `yt-research/`, that lets Claude Code and Cowork 
 
 ## Steps
 
-1. **Turn the repo into a skill repo.** Remove the Vite/PWA files (`package*.json`, `vite.config.js`, `index.html`, `src/`, `public/`, the Pages deploy workflow). Rewrite the rules in AGENTS.md for a Python skill, point CI at `pytest`, and keep `.claude/skills/`.
+1. ✅ **Turn the repo into a skill repo.** Remove the Vite/PWA files (`package*.json`, `vite.config.js`, `index.html`, `src/`, `public/`, the Pages deploy workflow). Rewrite the rules in AGENTS.md for a Python skill, point CI at `pytest`, and keep `.claude/skills/`.
 2. **Write the shared helper `scripts/_common.py`.**
    - Input parsing: channel URL, `@handle` or ID; video URL or ID.
    - One JSON error shape: `{"error": {"code", "message", "hint"}}` with exit code 1 and no tracebacks.
