@@ -12,7 +12,7 @@ We're building an Agent Skill, `yt-research/`, that lets Claude Code and Cowork 
    - One JSON error shape: `{"error": {"code", "message", "hint"}}` with exit code 1 and no tracebacks.
    - Backend choice: use cloud when `YT_API_KEY` / `SUPADATA_API_KEY` are set, otherwise local, with fallback on cloud failure.
    - `YT_PROXY` passthrough for the local backend.
-   - Every script declares its dependencies in a `uv` (PEP 723) header, with a `pip install` fallback.
+   - Every script lists its dependencies at the top of the file so `uv run` installs them, with a `pip install` fallback.
 3. ✅ **Build `channel_videos.py`** with `--latest N`, `--popular N`, `--include shorts,live` and `--exact-dates`.
    - Cloud: resolve the handle, read the uploads playlist (the videos-only, shorts or live variants), batch `videos.list` for views and duration, and sort by views for "popular". Dates are exact. It never uses the 100-unit `search` call.
    - Local: yt-dlp flat listing with approximate dates (`date_approximate: true`); `--exact-dates` fetches each video.
@@ -23,7 +23,7 @@ We're building an Agent Skill, `yt-research/`, that lets Claude Code and Cowork 
    - Transcript order: Supadata first, then youtube-transcript-api (through `YT_PROXY` if set) if Supadata fails, is out of credits or has no key. If both fail, return a clear error.
    - Supadata is called with existing captions only, so a missing transcript never burns AI-generation credits unless `--ai-transcript` is passed.
 5. ✅ **Map every failure to a clear error code:** `NO_CAPTIONS`, `PRIVATE_OR_UNAVAILABLE`, `NOT_FOUND`, `RATE_LIMITED`, `IP_BLOCKED`, `QUOTA_EXCEEDED`, `BAD_API_KEY`, `MISSING_DEPENDENCY`. Each message says what to do next.
-6. ✅ **Write `SKILL.md` and `README.md`.** Add `.claude/skills/yt-research` as a shortcut (symlink) to `yt-research/`, so cloud sessions on this repo find the skill (decided during the build).
+6. ✅ **Write `SKILL.md` and `README.md`.** Add `.claude/skills/yt-research` as a shortcut to `yt-research/`, so cloud sessions on this repo find the skill (decided during the build).
    - SKILL.md: when to use each script, example workflows ("top 10 popular, then summarise #1"), how to read errors, and to keep transcripts out of chat unless asked.
    - README: one-time setup. Get the two keys, add them as cloud environment variables, allow `www.googleapis.com` and `api.supadata.ai`, and install for Cowork, for Claude Code on Windows, and for phone use.
 7. ✅ **Tests.** Offline `pytest` with saved sample responses: input parsing, popular sorting, chapter parsing, language and auto-generated selection, error mapping, and backend fallback. Plus a short manual live checklist (`docs/live-checklist.md`).

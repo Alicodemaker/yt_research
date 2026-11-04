@@ -16,7 +16,7 @@ This is the only rules file for this repo. `CLAUDE.md` points here, and rules mu
 
 - **Layout.** The skill lives in `yt-research/` (`SKILL.md` + `scripts/`). Tests live in `tests/`. The `yt-research/` folder must stay self-contained so it can be zipped and uploaded as a skill.
 - **Python 3.10+, standard library first.** The cloud backend uses only the standard library (`urllib`). `yt-dlp` and `youtube-transcript-api` are imported lazily, only by the local backend, so a missing package becomes a `MISSING_DEPENDENCY` error, not a crash.
-- **Self-installing scripts.** Each script declares its dependencies in a PEP 723 header so `uv run` works with no setup. `pip install -U yt-dlp youtube-transcript-api` is the documented fallback.
+- **Self-installing scripts.** Each script lists its dependencies at the top of the file, so `uv run` installs them with no setup. `pip install -U yt-dlp youtube-transcript-api` is the documented fallback.
 - **JSON only on stdout.** Success prints JSON and exits 0. Failure prints `{"error": {"code", "message", "hint"}}` and exits 1. Never print a traceback.
 - **Stay inside the free tiers.** Never call the YouTube `search` endpoint (100 units). Never let Supadata AI-generate a transcript unless `--ai-transcript` is passed.
 - **Secrets.** Never commit API keys. They come from `YT_API_KEY`, `SUPADATA_API_KEY` and optionally `YT_PROXY`.
