@@ -156,10 +156,8 @@ def supadata_transcript(video_id, langs, allow_ai):
         if available:
             answer = supadata_get(video_id, available, allow_ai)
             break
-    content = answer.get("content")
-    if isinstance(content, list):  # timestamped segments, if text=true was ignored
-        content = " ".join(segment.get("text", "") for segment in content)
-    return {"text": " ".join((content or "").split()), "language": answer.get("lang"), "auto_generated": None}
+    text = " ".join((answer.get("content") or "").split())
+    return {"text": text, "language": answer.get("lang"), "auto_generated": None}
 
 
 def supadata_get(video_id, lang, allow_ai):
