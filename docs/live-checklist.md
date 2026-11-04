@@ -19,7 +19,7 @@ The offline tests (`pytest -q`) use fakes. Run these against the real services a
 ## Error cases
 
 - [x] A private or removed video gives `PRIVATE_OR_UNAVAILABLE` with exit code 1.
-- [x] A video with no captions keeps its metadata, and `transcript_error.code` is `NO_CAPTIONS`.
+- [ ] A video with no captions keeps its metadata, and `transcript_error.code` is `NO_CAPTIONS`. (Not yet tried live; covered by offline tests.)
 - [x] `channel_videos.py <a video URL>` gives `BAD_INPUT`, with a hint to use `video_info.py`.
 
 ## Results
