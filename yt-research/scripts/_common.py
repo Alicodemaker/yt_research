@@ -247,6 +247,14 @@ class QuietLogger:
     info = warning = error = debug
 
 
+def ytdlp_options() -> dict:
+    """Options every yt-dlp call shares: silent, metadata only, through YT_PROXY if set."""
+    options = {"quiet": True, "no_warnings": True, "logger": QuietLogger(), "skip_download": True}
+    if proxy_url():
+        options["proxy"] = proxy_url()
+    return options
+
+
 # ---------------------------------------------------------------- HTTP edge (cloud backend)
 
 

@@ -138,11 +138,8 @@ def cloud_video(item, kind):
 def local(kind, value, args):
     yt_dlp = c.require("yt_dlp")
     base = c.channel_url(kind, value)
-    options = {"quiet": True, "no_warnings": True, "logger": c.QuietLogger(), "skip_download": True,
-               "extract_flat": "in_playlist",
+    options = {**c.ytdlp_options(), "extract_flat": "in_playlist",
                "extractor_args": {"youtubetab": {"approximate_date": [""]}}}
-    if c.proxy_url():
-        options["proxy"] = c.proxy_url()
     if not args.popular:
         options["playlistend"] = args.latest
 
@@ -157,7 +154,7 @@ def local(kind, value, args):
         raise c.YTError("NOT_FOUND", f"{base} has no videos, shorts or live tabs.")
     out = select(channel, videos, args, True)
     if args.exact_dates:
-        exact_dates(yt_dlp, out, {k: v for k, v in options.items() if k not in ("extract_flat", "playlistend")})
+        exact_dates(yt_dlp, out, c.ytdlp_options())
     return out
 
 

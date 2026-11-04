@@ -127,11 +127,8 @@ def cloud_metadata(video_id):
 
 def local_metadata(video_id):
     yt_dlp = c.require("yt_dlp")
-    options = {"quiet": True, "no_warnings": True, "logger": c.QuietLogger(), "skip_download": True}
-    if c.proxy_url():
-        options["proxy"] = c.proxy_url()
     try:
-        with yt_dlp.YoutubeDL(options) as ydl:
+        with yt_dlp.YoutubeDL(c.ytdlp_options()) as ydl:
             info = ydl.extract_info(c.video_url(video_id), download=False)
     except Exception as err:  # DownloadError, or a plain network error
         raise c.ytdlp_error(err) from None
