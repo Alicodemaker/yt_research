@@ -71,6 +71,14 @@ Failures look like `{"error": {"code", "message", "hint"}}`. Follow the hint. Ne
 - `YT_PROXY`: an optional proxy URL for the local backend.
 - With no keys, everything runs locally via yt-dlp and youtube-transcript-api. This works on a home connection, but is usually blocked from cloud servers.
 
+## Replying on a phone
+
+Only when the user is on a phone (they say so, for example "on phone", or the session says it was started from the Claude mobile app), keep chat replies short and easy to scan on a small screen:
+- a few sentences or a short numbered list, with no wide tables
+- videos as one line each: `1. Title (May 2019, 113M views): link`
+
+Otherwise, reply in the normal way.
+
 ## Good manners with output
 
 Transcripts can be very long. Don't paste a full transcript into the chat unless asked: quote the relevant parts or summarise. When listing videos for the user, show title, date, views and link, not raw JSON.

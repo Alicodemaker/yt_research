@@ -14,6 +14,8 @@ This is the only rules file for this repo. `CLAUDE.md` points here, and rules mu
 
 ## General rules
 
+- **YouTube questions: intended sources first.** For anything about YouTube channels or videos, use the `yt-research` skill (`yt-research/SKILL.md`) first. Its scripts use the YouTube Data API (`YT_API_KEY`) and Supadata transcripts (`SUPADATA_API_KEY`), with yt-dlp and youtube-transcript-api as fallback. Use other sources (web search, news, summary sites) only for what the skill can't provide, or after it fails with an error it can't recover from. When you do, say which facts came from them. For what a video says, its transcript beats any article or summary.
+
 - **Layout.** The skill lives in `yt-research/` (`SKILL.md` + `scripts/`). Tests live in `tests/`. The `yt-research/` folder must stay self-contained so it can be zipped and uploaded as a skill.
 - **Python 3.10+, standard library first.** The cloud backend uses only the standard library (`urllib`). `yt-dlp` and `youtube-transcript-api` are imported lazily, only by the local backend, so a missing package becomes a `MISSING_DEPENDENCY` error, not a crash.
 - **Self-installing scripts.** Each script lists its dependencies at the top of the file, so `uv run` installs them with no setup. `pip install -U yt-dlp youtube-transcript-api` is the documented fallback.
