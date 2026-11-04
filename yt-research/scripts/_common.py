@@ -6,6 +6,7 @@ Standard library only, so the cloud backend needs nothing installed.
 """
 from __future__ import annotations
 
+import argparse
 import importlib
 import json
 import os
@@ -14,6 +15,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 
 VIDEO_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
 CHANNEL_ID = re.compile(r"^UC[A-Za-z0-9_-]{22}$")
@@ -121,13 +123,21 @@ def video_url(video_id: str) -> str:
     return f"https://www.youtube.com/watch?v={video_id}"
 
 
-# ---------------------------------------------------------------- output
+# ---------------------------------------------------------------- arguments and output
 
 
-def run(main) -> None:
+class ArgParser(argparse.ArgumentParser):
+    """argparse that reports bad arguments as a JSON BAD_INPUT error instead of usage text."""
+
+    def error(self, message):
+        raise YTError("BAD_INPUT", message, f"Run `{self.prog} --help` for usage.")
+
+
+
+def run(main, argv: list[str] | None = None) -> None:
     """Run a script's main(argv) -> dict: JSON on stdout, exit 1 on any failure, never a traceback."""
     try:
-        result = main(sys.argv[1:])
+        result = main(sys.argv[1:] if argv is None else argv)
     except YTError as err:
         print(json.dumps({"error": err.to_dict()}, ensure_ascii=False, indent=2))
         sys.exit(1)
@@ -136,6 +146,45 @@ def run(main) -> None:
         print(json.dumps({"error": error.to_dict()}, ensure_ascii=False, indent=2))
         sys.exit(1)
     print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+# ---------------------------------------------------------------- formatting
+
+
+def format_duration(seconds) -> str | None:
+    """605 -> "10:05", 3723 -> "1:02:03"."""
+    if seconds is None:
+        return None
+    seconds = int(seconds)
+    hours, rest = divmod(seconds, 3600)
+    minutes, secs = divmod(rest, 60)
+    return f"{hours}:{minutes:02d}:{secs:02d}" if hours else f"{minutes}:{secs:02d}"
+
+
+ISO_DURATION = re.compile(r"^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$")
+
+
+def parse_iso_duration(text: str | None) -> int | None:
+    """YouTube Data API durations: "PT1H2M3S" -> 3723. "P0D" (upcoming live) -> None."""
+    match = ISO_DURATION.match(text or "")
+    if not match:
+        return None
+    days, hours, minutes, secs = (int(g or 0) for g in match.groups())
+    total = days * 86400 + hours * 3600 + minutes * 60 + secs
+    return total or None
+
+
+def ymd(compact: str | None) -> str | None:
+    """yt-dlp "20260304" -> "2026-03-04"."""
+    if compact and len(compact) == 8 and compact.isdigit():
+        return f"{compact[:4]}-{compact[4:6]}-{compact[6:]}"
+    return None
+
+
+def date_from_timestamp(timestamp) -> str | None:
+    if timestamp is None:
+        return None
+    return datetime.fromtimestamp(int(timestamp), tz=timezone.utc).strftime("%Y-%m-%d")
 
 
 # ---------------------------------------------------------------- environment
@@ -152,6 +201,50 @@ def require(module: str):
         return importlib.import_module(module)
     except ImportError:
         raise YTError("MISSING_DEPENDENCY", f"The Python package for '{module}' is not installed.") from None
+
+
+# Ordered: the first matching phrase in a yt-dlp error message decides the code.
+YTDLP_ERRORS = [
+    ("confirm your age", "PRIVATE_OR_UNAVAILABLE"),
+    ("sign in to confirm you", "IP_BLOCKED"),       # "...you're not a bot"
+    ("not a bot", "IP_BLOCKED"),
+    ("http error 429", "RATE_LIMITED"),
+    ("too many requests", "RATE_LIMITED"),
+    ("private video", "PRIVATE_OR_UNAVAILABLE"),
+    ("video is private", "PRIVATE_OR_UNAVAILABLE"),
+    ("members-only", "PRIVATE_OR_UNAVAILABLE"),
+    ("join this channel", "PRIVATE_OR_UNAVAILABLE"),
+    ("has been removed", "PRIVATE_OR_UNAVAILABLE"),
+    ("not available in your country", "PRIVATE_OR_UNAVAILABLE"),
+    ("video unavailable", "PRIVATE_OR_UNAVAILABLE"),
+    ("this channel does not exist", "NOT_FOUND"),
+    ("http error 404", "NOT_FOUND"),
+    ("tunnel connection failed", "NETWORK_ERROR"),
+    ("getaddrinfo", "NETWORK_ERROR"),
+    ("name or service not known", "NETWORK_ERROR"),
+    ("connection refused", "NETWORK_ERROR"),
+    ("timed out", "NETWORK_ERROR"),
+]
+
+
+def ytdlp_error(err: Exception) -> YTError:
+    """Turn a yt-dlp DownloadError into a YTError with a useful code."""
+    message = re.sub(r"^ERROR:\s*", "", str(err)).strip()
+    message = re.split(r";? please report this issue", message, flags=re.IGNORECASE)[0].strip()
+    lowered = message.lower()
+    for phrase, code in YTDLP_ERRORS:
+        if phrase in lowered:
+            return YTError(code, message)
+    return YTError("UNEXPECTED", message)
+
+
+class QuietLogger:
+    """yt-dlp logger that keeps stderr clean; errors still arrive as exceptions."""
+
+    def debug(self, msg):
+        pass
+
+    info = warning = error = debug
 
 
 # ---------------------------------------------------------------- HTTP edge (cloud backend)
@@ -179,6 +272,35 @@ def fetch_json(url: str, params: dict | None = None, headers: dict | None = None
 
 
 # ---------------------------------------------------------------- backend fallback
+
+
+YOUTUBE_API = "https://www.googleapis.com/youtube/v3/"
+
+
+def youtube_api(endpoint: str, **params) -> dict:
+    """Call the YouTube Data API v3 with YT_API_KEY and map its errors to YTError codes."""
+    query = {k: v for k, v in params.items() if v is not None}
+    status, body = fetch_json(YOUTUBE_API + endpoint, {**query, "key": env("YT_API_KEY")})
+    if status == 200:
+        return body
+    error = body.get("error") or {}
+    reasons = {e.get("reason") for e in error.get("errors") or []}
+    reasons |= {d.get("reason") for d in error.get("details") or []}
+    message = re.sub(r"<[^>]+>", "", error.get("message") or f"HTTP {status}")
+    message = f"YouTube Data API: {message}"
+    if reasons & {"quotaExceeded", "dailyLimitExceeded"}:
+        raise YTError("QUOTA_EXCEEDED", message)
+    if status == 429 or reasons & {"rateLimitExceeded", "userRateLimitExceeded"}:
+        raise YTError("RATE_LIMITED", message)
+    if reasons & {"keyInvalid", "keyExpired", "API_KEY_INVALID", "API_KEY_EXPIRED"} or "api key not valid" in message.lower():
+        raise YTError("BAD_API_KEY", message, "YT_API_KEY was rejected. Create a new key in Google Cloud Console.")
+    if reasons & {"accessNotConfigured", "SERVICE_DISABLED"}:
+        raise YTError("BAD_API_KEY", message, "Enable 'YouTube Data API v3' in the Google Cloud project that owns YT_API_KEY.")
+    if status == 403:
+        raise YTError("BAD_API_KEY", message, "YT_API_KEY is not allowed to call the YouTube Data API. Check its API restrictions.")
+    if status == 404:
+        raise YTError("NOT_FOUND", message)
+    raise YTError("UNEXPECTED", f"{message} (HTTP {status})")
 
 
 def first_success(attempts):

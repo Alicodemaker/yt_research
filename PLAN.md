@@ -13,7 +13,7 @@ We're building an Agent Skill, `yt-research/`, that lets Claude Code and Cowork 
    - Backend choice: use cloud when `YT_API_KEY` / `SUPADATA_API_KEY` are set, otherwise local, with fallback on cloud failure.
    - `YT_PROXY` passthrough for the local backend.
    - Every script declares its dependencies in a `uv` (PEP 723) header, with a `pip install` fallback.
-3. **Build `channel_videos.py`** with `--latest N`, `--popular N`, `--include shorts,live` and `--exact-dates`.
+3. ✅ **Build `channel_videos.py`** with `--latest N`, `--popular N`, `--include shorts,live` and `--exact-dates`.
    - Cloud: resolve the handle, read the uploads playlist (the videos-only, shorts or live variants), batch `videos.list` for views and duration, and sort by views for "popular". Dates are exact. It never uses the 100-unit `search` call.
    - Local: yt-dlp flat listing with approximate dates (`date_approximate: true`); `--exact-dates` fetches each video.
 4. **Build `video_info.py`** with `--no-transcript`, `--lang da,en` (default `en`) and an opt-in `--ai-transcript`.
