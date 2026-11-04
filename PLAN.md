@@ -16,7 +16,7 @@ We're building an Agent Skill, `yt-research/`, that lets Claude Code and Cowork 
 3. ✅ **Build `channel_videos.py`** with `--latest N`, `--popular N`, `--include shorts,live` and `--exact-dates`.
    - Cloud: resolve the handle, read the uploads playlist (the videos-only, shorts or live variants), batch `videos.list` for views and duration, and sort by views for "popular". Dates are exact. It never uses the 100-unit `search` call.
    - Local: yt-dlp flat listing with approximate dates (`date_approximate: true`); `--exact-dates` fetches each video.
-4. **Build `video_info.py`** with `--no-transcript`, `--lang da,en` (default `en`) and an opt-in `--ai-transcript`.
+4. ✅ **Build `video_info.py`** with `--no-transcript`, `--lang da,en` (default `en`) and an opt-in `--ai-transcript`.
    - Metadata comes from `videos.list` (cloud) or yt-dlp (local). Chapters come from yt-dlp or from the timestamps in the description.
    - Transcript language order: the `--lang` languages, then the original language. Auto-generated captions are preferred over creator-made ones where the backend allows it.
    - The transcript is plain text. The output includes the language, whether it's auto-generated, and `source`.

@@ -147,3 +147,103 @@ def install_fake_ytdlp(monkeypatch, responses):
     monkeypatch.setitem(sys.modules, "yt_dlp", module)
     monkeypatch.setitem(sys.modules, "yt_dlp.utils", utils)
     return module
+
+
+class FakeSupadata:
+    """Supadata GET /v1/transcript: falls back to `default` when the asked language is missing."""
+
+    def __init__(self, tracks, default=None, key="supa-key"):
+        self.tracks = tracks          # {"en": "plain text", ...}
+        self.default = default or next(iter(tracks), None)
+        self.key = key
+        self.calls = []
+        self.error = None             # (status, body) for every call when set
+        self.job = False              # answer 202 + jobId first, like long or AI transcripts
+
+    def __call__(self, url, params=None, headers=None, timeout=30):
+        params = dict(params or {})
+        self.calls.append((url, params, dict(headers or {})))
+        if (headers or {}).get("x-api-key") != self.key:
+            return 401, {"error": "unauthorized", "message": "Invalid API key"}
+        if self.error:
+            return self.error
+        if url.endswith("/transcript/job-1"):
+            return 200, {"status": "completed", **self._answer(self.default)}
+        if not self.tracks:
+            return 404, {"error": "transcript-unavailable", "message": "No transcript is available for this video"}
+        if self.job:
+            return 202, {"jobId": "job-1"}
+        return 200, self._answer(params.get("lang") if params.get("lang") in self.tracks else self.default)
+
+    def _answer(self, lang):
+        return {"content": self.tracks[lang], "lang": lang, "availableLangs": list(self.tracks)}
+
+    def langs_requested(self):
+        return [params.get("lang") for _, params, _ in self.calls]
+
+
+SUPADATA_OUT_OF_CREDITS = (429, {"error": "limit-exceeded", "message": "Monthly credit limit exceeded"})
+
+
+def route(**fakes):
+    """One fetch_json fake that sends each host to its fake service."""
+
+    def fetch(url, params=None, headers=None, timeout=30):
+        for host, fake in fakes.items():
+            if host in url:
+                return fake(url, params, headers, timeout)
+        raise AssertionError(f"unexpected network call to {url}")
+
+    return fetch
+
+
+def install_fake_transcripts(monkeypatch, tracks=(), error=None):
+    """Install a fake `youtube_transcript_api`.
+
+    `tracks` are (language_code, is_generated, text) tuples; text segments are split on "|".
+    `error` is an exception class name to raise from list(), e.g. "TranscriptsDisabled".
+    """
+    module = types.ModuleType("youtube_transcript_api")
+    proxies = types.ModuleType("youtube_transcript_api.proxies")
+    module.created = []
+
+    class GenericProxyConfig:
+        def __init__(self, http_url=None, https_url=None):
+            self.http_url, self.https_url = http_url, https_url
+
+    class Snippet:
+        def __init__(self, text):
+            self.text, self.start, self.duration = text, 0.0, 1.0
+
+    class Fetched:
+        def __init__(self, track):
+            self.language_code, self.is_generated = track.language_code, track.is_generated
+            self.snippets = [Snippet(part) for part in track.text.split("|")]
+
+    class Track:
+        def __init__(self, language_code, is_generated, text):
+            self.language_code, self.is_generated, self.text = language_code, is_generated, text
+            self.language = language_code
+
+        def fetch(self):
+            return Fetched(self)
+
+    class YouTubeTranscriptApi:
+        def __init__(self, proxy_config=None, http_client=None):
+            self.proxy_config = proxy_config
+            module.created.append(self)
+
+        def list(self, video_id):
+            if error:
+                raise type(error, (Exception,), {})(
+                    f"\nCould not retrieve a transcript for the video https://www.youtube.com/watch?v={video_id}!"
+                    f" This is most likely caused by:\n\n{error} happened\n\nIf you are sure that the described"
+                    " cause is not responsible for this error, please open an issue.")
+            return iter([Track(*t) for t in tracks])
+
+    proxies.GenericProxyConfig = GenericProxyConfig
+    module.proxies = proxies
+    module.YouTubeTranscriptApi = YouTubeTranscriptApi
+    monkeypatch.setitem(sys.modules, "youtube_transcript_api", module)
+    monkeypatch.setitem(sys.modules, "youtube_transcript_api.proxies", proxies)
+    return module
