@@ -221,3 +221,17 @@ def test_proxy_is_used_by_both_local_libraries(cli, monkeypatch):
     cli(video_info, VID)
     assert ytdlp.calls[0][1]["proxy"] == "http://user:pass@proxy.example:8080"
     assert transcripts.created[0].proxy_config.https_url == "http://user:pass@proxy.example:8080"
+
+
+@pytest.mark.parametrize("error, code, falls_back", [
+    ("SUPADATA_RATE_LIMITED", "RATE_LIMITED", True),
+    ("SUPADATA_OUT_OF_CREDITS", "QUOTA_EXCEEDED", True),
+    ("SUPADATA_RESTRICTED", "PRIVATE_OR_UNAVAILABLE", False),
+])
+def test_supadata_errors_follow_its_docs(cloud, cli, monkeypatch, supadata, error, code, falls_back):
+    import fakes
+    supadata.error = getattr(fakes, error)
+    transcripts = install_fake_transcripts(monkeypatch, error="RequestBlocked")  # as in the cloud
+    _, out = cli(video_info, VID)
+    assert out["transcript_error"]["code"] == code
+    assert bool(transcripts.created) is falls_back

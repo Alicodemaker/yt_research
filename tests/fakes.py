@@ -164,13 +164,14 @@ class FakeSupadata:
         params = dict(params or {})
         self.calls.append((url, params, dict(headers or {})))
         if (headers or {}).get("x-api-key") != self.key:
-            return 401, {"error": "unauthorized", "message": "Invalid API key"}
+            return 401, {"error": "unauthorized", "message": "Unauthorized", "details": "Invalid API key"}
         if self.error:
             return self.error
         if url.endswith("/transcript/job-1"):
             return 200, {"status": "completed", **self._answer(self.default)}
         if not self.tracks:
-            return 404, {"error": "transcript-unavailable", "message": "No transcript is available for this video"}
+            return 206, {"error": "transcript-unavailable", "message": "Transcript Unavailable",
+                         "details": "No transcript is available for this video"}
         if self.job:
             return 202, {"jobId": "job-1"}
         return 200, self._answer(params.get("lang") if params.get("lang") in self.tracks else self.default)
@@ -182,7 +183,12 @@ class FakeSupadata:
         return [params.get("lang") for _, params, _ in self.calls]
 
 
-SUPADATA_OUT_OF_CREDITS = (429, {"error": "limit-exceeded", "message": "Monthly credit limit exceeded"})
+SUPADATA_OUT_OF_CREDITS = (429, {"error": "limit-exceeded", "message": "Limit Exceeded",
+                                  "details": "Plan usage limit was exceeded."})
+SUPADATA_RATE_LIMITED = (429, {"error": "limit-exceeded", "message": "Limit Exceeded",
+                               "details": "Request rate limit on current plan was exceeded."})
+SUPADATA_RESTRICTED = (403, {"error": "forbidden", "message": "Forbidden",
+                             "details": "The video requires authentication or is restricted"})
 
 
 def route(**fakes):

@@ -48,7 +48,7 @@ Inputs can be anything the user pastes: `@handle`, a bare handle, a channel URL 
 - Transcript: `transcript` (one plain-text string with no timestamps), plus `transcript_language`, `transcript_auto_generated` (null when unknown) and `transcript_source`.
 - If the transcript can't be fetched, `transcript` is null and `transcript_error` explains why. The metadata is still valid, so use it.
 
-`source` says which backend answered: `cloud` (YouTube Data API) or `local` (yt-dlp). When `date_approximate` is true (local backend), dates can be off by weeks. Say "about" when quoting them, or pass `--exact-dates` (slower).
+`source` says which backend answered: `cloud` (YouTube Data API) or `local` (yt-dlp). In `channel_videos.py` the local backend's dates (`date_approximate: true`) can be off by days for recent videos and by months for old ones, and its views are rounded (7.4M → 7400000). Say "about" when quoting them, or pass `--exact-dates` (slower) for exact dates. `video_info.py` always returns exact numbers.
 
 ## Errors
 
@@ -58,7 +58,7 @@ Failures look like `{"error": {"code", "message", "hint"}}`. Follow the hint. Ne
 |---|---|
 | `BAD_INPUT` | Fix the argument (for example, a video URL was passed to `channel_videos.py`). |
 | `NOT_FOUND` / `PRIVATE_OR_UNAVAILABLE` | Tell the user. Retrying won't help. |
-| `NO_CAPTIONS` | Work from the title, description and chapters, and say there was no transcript. Only offer `--ai-transcript` if the user wants it: it uses about 2 Supadata credits per minute of video. |
+| `NO_CAPTIONS` | Work from the title, description and chapters, and say there was no transcript. Don't retry: even a "no captions" answer costs 1 Supadata credit. Only offer `--ai-transcript` if the user wants it: it uses 2 Supadata credits per minute of video. |
 | `RATE_LIMITED` | Wait, then ask for fewer videos. |
 | `IP_BLOCKED` | YouTube blocks this machine (common in cloud sessions). The user needs `YT_API_KEY` / `SUPADATA_API_KEY`, or `YT_PROXY`. |
 | `QUOTA_EXCEEDED` | A free tier is used up (YouTube resets daily, Supadata monthly). Tell the user. |

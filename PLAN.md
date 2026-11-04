@@ -23,7 +23,7 @@ We're building an Agent Skill, `yt-research/`, that lets Claude Code and Cowork 
    - Transcript order: Supadata first, then youtube-transcript-api (through `YT_PROXY` if set) if Supadata fails, is out of credits or has no key. If both fail, return a clear error.
    - Supadata is called with existing captions only, so a missing transcript never burns AI-generation credits unless `--ai-transcript` is passed.
 5. ✅ **Map every failure to a clear error code:** `NO_CAPTIONS`, `PRIVATE_OR_UNAVAILABLE`, `NOT_FOUND`, `RATE_LIMITED`, `IP_BLOCKED`, `QUOTA_EXCEEDED`, `BAD_API_KEY`, `MISSING_DEPENDENCY`. Each message says what to do next.
-6. **Write `SKILL.md` and `README.md`.**
+6. ✅ **Write `SKILL.md` and `README.md`.** Add `.claude/skills/yt-research` as a shortcut (symlink) to `yt-research/`, so cloud sessions on this repo find the skill (decided during the build).
    - SKILL.md: when to use each script, example workflows ("top 10 popular, then summarise #1"), how to read errors, and to keep transcripts out of chat unless asked.
    - README: one-time setup. Get the two keys, add them as cloud environment variables, allow `www.googleapis.com` and `api.supadata.ai`, and install for Cowork, for Claude Code on Windows, and for phone use.
 7. **Tests.** Offline `pytest` with saved sample responses: input parsing, popular sorting, chapter parsing, language and auto-generated selection, error mapping, and backend fallback. Plus a short manual live checklist.

@@ -19,8 +19,8 @@ import time
 import _common as c
 
 SUPADATA = "https://api.supadata.ai/v1/transcript"
-POLL_SECONDS = 2
-POLL_ATTEMPTS = 45  # about 90 seconds for an AI-generated transcript
+POLL_SECONDS = 1     # Supadata recommends polling every second
+POLL_ATTEMPTS = 300  # AI transcripts of long videos can take minutes
 
 # youtube-transcript-api exception class names -> our codes (by name, so library versions don't matter).
 TRANSCRIPT_ERRORS = {
@@ -185,21 +185,27 @@ def supadata_wait(job_id, headers):
         if body.get("status") == "completed":
             return body
         if body.get("status") == "failed":
-            raise c.YTError("NO_CAPTIONS", f"Supadata could not create a transcript: {body.get('error')}")
+            raise supadata_error(200, body.get("error") or {"error": "transcript-unavailable"})
     raise c.YTError("UNEXPECTED", "Supadata did not finish the transcript in time.", "Try again in a minute.")
 
 
 def supadata_error(status, body):
+    """Map Supadata errors (docs.supadata.ai/errors) to our codes."""
     kind = str(body.get("error") or "")
-    message = f"Supadata: {body.get('message') or kind or f'HTTP {status}'}"
-    if status == 404 or kind == "transcript-unavailable":
+    details = str(body.get("details") or "")
+    message = f"Supadata: {details or body.get('message') or kind or f'HTTP {status}'}"
+    if status == 206 or kind == "transcript-unavailable":
         return c.YTError("NO_CAPTIONS", message)
-    if status in (401, 403) or kind == "unauthorized":
+    if status in (403, 404) or kind in ("forbidden", "not-found"):
+        return c.YTError("PRIVATE_OR_UNAVAILABLE", message)
+    if status == 401 or kind == "unauthorized":
         return c.YTError("BAD_API_KEY", message, "SUPADATA_API_KEY was rejected. Copy it again from the Supadata dashboard.")
-    if status in (402, 429) or kind in ("limit-exceeded", "upgrade-required"):
-        if "rate" in message.lower():
-            return c.YTError("RATE_LIMITED", message)
-        return c.YTError("QUOTA_EXCEEDED", message, "The free 100 Supadata transcripts for this month are used up.")
+    if status == 429 or kind == "limit-exceeded":
+        if "usage limit" in details.lower():
+            return c.YTError("QUOTA_EXCEEDED", message, "This month's free Supadata credits are used up. They reset next billing cycle.")
+        return c.YTError("RATE_LIMITED", message)
+    if status == 402 or kind == "upgrade-required":
+        return c.YTError("QUOTA_EXCEEDED", message, "This Supadata feature is not on the free plan.")
     return c.YTError("UNEXPECTED", f"{message} (HTTP {status})")
 
 
@@ -242,7 +248,10 @@ def transcript_error(err):
     text = str(err)
     if "most likely caused by:" in text:
         text = text.split("most likely caused by:", 1)[1].split("If you are sure", 1)[0]
-    return c.YTError(code, f"{type(err).__name__}: {' '.join(text.split())}")
+    text = " ".join(text.split())
+    if len(text) > 200:  # the library explains workarounds at length; keep the first sentence
+        text = text[:text.find(". ", 20) + 1 or 200]
+    return c.YTError(code, f"{type(err).__name__}: {text}")
 
 
 if __name__ == "__main__":
