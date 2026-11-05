@@ -7,6 +7,12 @@ description: Build a throwaway prototype to answer a design question. Use when t
 
 A prototype is **throwaway code that answers a question**. The question decides the shape.
 
+## When to use
+
+- Trying an idea on a throwaway branch (`prototype/<name>`) to answer one question.
+
+**Don't use for:** building the real feature (run `/fstack-nail` → `/fstack-plan`). Never merge a prototype branch. This repo has no UI, so the logic branch is nearly always the right one.
+
 ## Pick a branch
 
 Identify which question is being answered, using the user's prompt, the surrounding code, or by asking if the user is around:
@@ -24,3 +30,11 @@ The two branches produce very different artifacts, so getting this wrong wastes 
 4. **Skip the polish.** No tests, no error handling beyond what makes the prototype _runnable_, no abstractions. The point is to learn something fast.
 5. **Surface the state.** After every action (logic) or on every variant switch (UI), print or render the full relevant state so the user can see what changed.
 6. **Capture it when done.** Fold any validated decision into the real code, then capture the prototype itself as a **primary source**: commit it to a throwaway branch, out of main, and leave a context pointer to that branch on the implementation issue. Capture the answer too (the verdict and the question it settled) in the issue or a commit. The main branch keeps only the validated decision.
+
+## Output template
+
+1. **Question**: what the prototype answers.
+2. **Branch**: `prototype/<name>`.
+3. **Run**: one command. Skip it once the prototype is thrown away.
+4. **Verdict**: what you learned. There's no issue tracker, so the verdict always goes into `PLAN.md` or the commit message.
+5. **Next**: `/fstack-plan` if it works.
