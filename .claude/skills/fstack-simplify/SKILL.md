@@ -13,6 +13,8 @@ Audit for unnecessary complexity and propose deletions. Only deletions — never
 - `/fstack-check` spotted complexity and suggested running this skill.
 - Something feels bloated, over-engineered, or sloppy — one file or the whole thing.
 
+**Don't use for:** restructuring modules or moving seams. That goes to `improve-codebase-architecture`, and only when the user asks for it. Also not for adding anything.
+
 ## Steps
 
 1. Read the target. If it is the whole codebase, first get the lay of the land — file tree, entry points, dependencies, what is actually used.
@@ -28,6 +30,12 @@ Audit for unnecessary complexity and propose deletions. Only deletions — never
 3. Produce a list of proposed **deletions and reductions**. Each item is one line: what to remove, and what you'd lose (usually: nothing). For a whole-codebase pass, **rank** them and group by area, safe high-value cuts first.
 4. **Stop and ask** which ones to apply.
 5. Apply the approved ones. For a large pass, apply **one batch at a time** and run the tests or build between batches. If something breaks, stop and report before continuing.
+
+## Output template
+
+1. **Proposals**: a ranked list grouped by area, one line per item: what to remove and what you'd lose. Skip the grouping for a single-file pass.
+2. **Question**: "Which should I apply?"
+3. **After each applied batch**: the items applied and the test result.
 
 ## Must NOT
 

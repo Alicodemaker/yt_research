@@ -13,6 +13,8 @@ Review finished work before shipping. Answer three questions with evidence. Repo
 - `/fstack-build` finished all plan steps.
 - `/fstack` routed here because work is done and needs review.
 
+**Don't use for:** fixing what it finds. Planned fixes go through `/fstack-build`, bugs with an unclear cause go to `diagnosing-bugs`, and cleanup goes to `/fstack-simplify`.
+
 ## Steps
 
 Answer exactly three questions, in order, with evidence.
@@ -39,6 +41,10 @@ End with one line:
 - **Not ready: [reason]**
 
 **Stop and ask** the user what to do next. Do not fix what you found.
+
+## Output template
+
+The three questions above, in order, then the verdict line. Never skip a question. If nothing is affected beyond the changed file, say so. In this project, "Does it work?" means the `pytest` output plus one live run of any script that changed.
 
 ## Must NOT
 

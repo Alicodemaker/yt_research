@@ -12,6 +12,8 @@ Implement the approved plan in small steps. Verify each step before moving on. P
 - An approved `PLAN.md` exists and the user says to build.
 - `/fstack` routed here because the plan is approved and ready.
 
+**Don't use for:** work with no approved `PLAN.md` (run `/fstack-plan`), or reviewing finished work (run `/fstack-check`). Logic that must be correct uses `tdd` inside the step.
+
 ## Steps
 
 1. Take the first unfinished step from `PLAN.md`.
@@ -27,6 +29,14 @@ Implement the approved plan in small steps. Verify each step before moving on. P
 Pause when a step needs a decision that affects the rest of the work. Present the options in plain language. Say what you recommend and why. Wait for approval.
 
 If you discover work that is not in the plan, propose the amendment and **stop and ask**. Add it to `PLAN.md` only after the user approves it.
+
+## Output template
+
+One report per step:
+
+1. **Done**: what changed, in 1-2 sentences.
+2. **Verified**: the command you ran and its result, for example `pytest: 48 passed`.
+3. **Next**: "continuing to step N", or a choice with your recommendation and a question. Skip the choice when there's no real decision.
 
 ## Must NOT
 
