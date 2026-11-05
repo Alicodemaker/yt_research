@@ -58,11 +58,15 @@ Failures look like `{"error": {"code", "message", "hint"}}`. Follow the hint. Ne
 |---|---|
 | `BAD_INPUT` | Fix the argument (for example, a video URL was passed to `channel_videos.py`). |
 | `NOT_FOUND` / `PRIVATE_OR_UNAVAILABLE` | Tell the user. Retrying won't help. |
-| `NO_CAPTIONS` | Work from the title, description and chapters, and say there was no transcript. Don't retry: even a "no captions" answer costs 1 Supadata credit. Only offer `--ai-transcript` if the user wants it: it uses 2 Supadata credits per minute of video. |
+| `NO_CAPTIONS` | Work from the title, description and chapters, and say there was no transcript. Don't retry: even a "no captions" answer costs 1 Supadata credit. Don't use or offer `--ai-transcript`. |
 | `RATE_LIMITED` | Wait, then ask for fewer videos. |
 | `IP_BLOCKED` | YouTube blocks this machine (common in cloud sessions). The user needs `YT_API_KEY` / `SUPADATA_API_KEY`, or `YT_PROXY`. |
 | `QUOTA_EXCEEDED` | A free tier is used up (YouTube resets daily, Supadata monthly). Tell the user. |
 | `BAD_API_KEY`, `NETWORK_ERROR`, `MISSING_DEPENDENCY` | A setup problem. Tell the user the hint. |
+
+## Existing captions only
+
+Transcripts must come from a video's existing captions. Never AI-generate one: not with `--ai-transcript`, not with a Supadata connector, and not with Supadata's `auto` or `generate` modes. Use AI generation only if the user explicitly asks for an AI-generated transcript (it costs 2 Supadata credits per minute of video).
 
 ## Keys and limits (set by the user, never ask them to paste keys into chat)
 

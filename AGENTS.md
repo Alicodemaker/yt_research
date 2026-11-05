@@ -20,7 +20,8 @@ This is the only rules file for this repo. `CLAUDE.md` points here, and rules mu
 - **Python 3.10+, standard library first.** The cloud backend uses only the standard library (`urllib`). `yt-dlp` and `youtube-transcript-api` are imported lazily, only by the local backend, so a missing package becomes a `MISSING_DEPENDENCY` error, not a crash.
 - **Self-installing scripts.** Each script lists its dependencies at the top of the file, so `uv run` installs them with no setup. `pip install -U yt-dlp youtube-transcript-api` is the documented fallback.
 - **JSON only on stdout.** Success prints JSON and exits 0. Failure prints `{"error": {"code", "message", "hint"}}` and exits 1. Never print a traceback.
-- **Stay inside the free tiers.** Never call the YouTube `search` endpoint (100 units). Never let Supadata AI-generate a transcript unless `--ai-transcript` is passed.
+- **Stay inside the free tiers.** Never call the YouTube `search` endpoint (100 units).
+- **Existing captions only.** Supadata must only fetch a video's existing captions (`mode=native`), never AI-generate a transcript. This applies to every route: these scripts, a Supadata connector or direct API calls. Don't use or offer `--ai-transcript` or Supadata's `auto` / `generate` modes unless the user explicitly asks for an AI-generated transcript.
 - **Secrets.** Never commit API keys. They come from `YT_API_KEY`, `SUPADATA_API_KEY` and optionally `YT_PROXY`.
 - **Tests run offline.** `pytest` uses saved sample responses and never touches the network.
 - **Small commits.** Make one logical change per commit, with a plain one-line message. Push often.
