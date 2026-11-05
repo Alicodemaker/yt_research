@@ -16,6 +16,12 @@ uv run scripts/video_info.py <video> [--no-transcript] [--lang da,en] [--ai-tran
 If `uv` is missing: `pip install -U yt-dlp youtube-transcript-api` once, then use `python3 scripts/...`.
 (Use `python` instead of `python3` on Windows.)
 
+## When to use
+
+- The user names a channel, @handle, video link or video ID and wants a list, facts, a summary, quotes or a comparison.
+
+**Don't use for:** "find YouTube videos about X" with no channel or link. The scripts can't search YouTube (the search endpoint costs 100 units and is never used). Instead, ask which channels to look at, or find candidate links with web search and say they came from web search, then run `video_info.py` on each link. Also don't use it for AI-generated transcripts unless the user explicitly asks for one.
+
 ## Which script
 
 | The user wants | Run |
@@ -49,6 +55,16 @@ Inputs can be anything the user pastes: `@handle`, a bare handle, a channel URL 
 - If the transcript can't be fetched, `transcript` is null and `transcript_error` explains why. The metadata is still valid, so use it.
 
 `source` says which backend answered: `cloud` (YouTube Data API) or `local` (yt-dlp). In `channel_videos.py` the local backend's dates (`date_approximate: true`) can be off by days for recent videos and by months for old ones, and its views are rounded (7.4M → 7400000). Say "about" when quoting them, or pass `--exact-dates` (slower) for exact dates. `video_info.py` always returns exact numbers.
+
+## Output template
+
+A finished reply has these sections, in this order:
+
+1. **Answer**: the direct answer in 1-3 sentences. Always include it.
+2. **Videos**: one line each, `Title (Mon YYYY, views): link`, grouped by channel when there are several. Skip it when the reply is about one video and its link is in the answer.
+3. **What they say**: a summary or short quotes from the transcript, with the chapter or rough position for quotes. Skip it for list-only requests.
+4. **Gaps**: videos with no transcript (`NO_CAPTIONS`), "about" numbers from the local backend, anything left out on purpose and why, and facts from non-skill sources (name the source). Skip it if there are none.
+5. **Cost**: Supadata credits used by this request, and the monthly total if known. Skip it if no transcripts were fetched.
 
 ## Errors
 
@@ -86,3 +102,20 @@ Otherwise, reply in the normal way.
 ## Good manners with output
 
 Transcripts can be very long. Don't paste a full transcript into the chat unless asked: quote the relevant parts or summarise. When listing videos for the user, show title, date, views and link, not raw JSON.
+
+## Worked example
+
+**Starting context:** the user's Notion page has a "yt channels" list (10 channels just added: Nate Herk, Matt Pocock, Cole Medin and others) and a "yt vids" toggle that already holds 141 videos. Request: "go over the new channels and add vids to yt vids".
+
+**What was done:** `channel_videos.py @handle --latest … --popular …` for each channel → picked the on-topic videos → dropped every ID already in yt vids → `video_info.py <url> --lang en` for each pick → added each one in the page's existing format (title link + transcript toggle) → re-read the page and checked that each new ID appears exactly once.
+
+**Reply (shortened):**
+
+> I added 26 videos from the 10 new channels to yt vids, each with its transcript. All 26 appear exactly once.
+> - Matt Pocock (6): mattpocock/skills: a complete AI coding workflow · /handoff is my new favourite skill · …
+> - Tim Gabe (3): The Psychology of Premium Apps · I Studied 10,000 Paywall Screens · …
+>
+> Left out: AI news and hype, Grok bot and trading, older Figma tutorials, business-only videos.
+> Supadata: about 92 of 100 free monthly credits used.
+
+**Why it works:** it removes duplicates before spending credits, uses existing captions only, gives one line per video grouped by channel, says what was skipped and why, reports the credits left, and checks the write.
