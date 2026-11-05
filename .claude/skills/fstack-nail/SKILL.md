@@ -13,6 +13,8 @@ Nail down the task before planning or coding. Ask a few plain questions. Get a c
 - `/fstack` routed here because the idea needs clarification.
 - The user wants to nail down what they mean before moving on.
 
+**Don't use for:** a request that's already clear. Go to `/fstack-plan` instead. If you'd need more than 5 questions, the task is too big: propose a split.
+
 ## Steps
 
 1. Read the request. Look at the relevant parts of the codebase.
@@ -27,6 +29,13 @@ Nail down the task before planning or coding. Ask a few plain questions. Get a c
 ## If you have more than 5 questions
 
 The task is too big. Say so. Suggest splitting it into smaller tasks. Do not ask all 8 questions.
+
+## Output template
+
+Two messages:
+
+1. **Questions**: at most 5, numbered, in one message. Skip this message when nothing is unclear and go straight to the summary.
+2. **Summary**: exactly 3 lines (what we're building, the main constraint, what success looks like), ending with "Confirm?".
 
 ## Must NOT
 

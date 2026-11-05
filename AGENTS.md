@@ -30,7 +30,7 @@ This is the only rules file for this repo. `CLAUDE.md` points here, and rules mu
 
 ## Skill map
 
-The fstack loop is the backbone. Other skills plug in only at the points below. Never use two skills for the same job. If a skill mentions a skill that isn't on this map (for example, `tdd` mentions `code-review`), use the mapped skill for that job instead (`fstack-check` for review, `fstack-simplify` for cleanup).
+The fstack loop is the backbone. Other skills plug in only at the points below. Never use two skills for the same job. If a skill mentions a skill that isn't on this map (for example, a skill mentions `code-review`), use the mapped skill for that job instead (`fstack-check` for review, `fstack-simplify` for cleanup).
 
 | When | Use |
 |---|---|
@@ -50,4 +50,5 @@ Helper skills: `grilling`, `domain-modeling` and `codebase-design` are installed
 
 - **handoff:** cloud sessions are thrown away when they end, so save handoffs to `docs/handoffs/YYYY-MM-DD-HHMM.md` in the repo, not the OS temp folder, and commit and push them.
 - **prototype:** there is no issue tracker. Record the prototype branch name and the verdict in `PLAN.md` or a commit message.
+- **Locally edited skills:** the skills in `skills-lock.json` have project sections added (When to use, Output template, and sometimes a Worked example) plus small fixes. Don't reinstall or update them from upstream without re-applying these changes.
 - **Asking questions:** when a skill asks the user something, ask and wait. Never answer for the user.

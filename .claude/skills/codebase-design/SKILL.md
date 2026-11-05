@@ -7,6 +7,12 @@ description: Shared vocabulary for designing deep modules. Use when the user wan
 
 Design **deep modules**: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface. Use this language and these principles wherever code is being designed or restructured. The aim is leverage for callers, locality for maintainers, and testability for everyone.
 
+## When to use
+
+- A reference that `tdd` and `improve-codebase-architecture` load for the deep-module vocabulary. Consult it; don't run it as a session.
+
+**Don't use for:** "clean up this module". That's `/fstack-simplify`.
+
 ## Glossary
 
 Use these terms exactly: don't substitute "component," "service," "API," or "boundary." Consistent language is the whole point.

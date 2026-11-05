@@ -9,6 +9,12 @@ A discipline for hard bugs. Skip phases only when explicitly justified.
 
 When exploring the codebase, read `GLOSSARY.md` (if it exists) to get a clear mental model of the relevant modules, and check ADRs in the area you're touching.
 
+## When to use
+
+- Something is broken, throwing, failing or slow, and the cause isn't obvious.
+
+**Don't use for:** an obvious cause, such as a typo or an error that names its own fix: just fix it. Also not for yt-research error codes that already explain themselves (`QUOTA_EXCEEDED`, `IP_BLOCKED`, `NO_CAPTIONS`): follow the hint, because that's setup, not a bug.
+
 ## Redact
 
 This skill has you show commands, outputs and captured artifacts. **Redact every secret first**: write `<REDACTED>` in its place. Build loops against env vars, so the credential stays in the environment rather than in what you show. Captured artifacts carry auth headers: quote only the lines that carry the signal.
@@ -136,3 +142,13 @@ Required before declaring done:
 - [ ] All `[DEBUG-...]` instrumentation removed (`grep` the prefix)
 - [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message, so the next debugger learns
+
+## Output template
+
+1. **Loop**: the one command, plus its red output with secrets redacted.
+2. **Repro**: the minimised scenario. Skip it if the repro was already minimal, and say so.
+3. **Hypotheses**: 3-5, ranked, each with its prediction.
+4. **Probes**: what you checked and what it showed. For performance bugs, this is a baseline measurement instead.
+5. **Fix**: the fix plus a regression test, or a note that no correct seam exists.
+6. **Cleanup**: the Phase 6 checklist, ticked.
+7. **Cause**: one sentence, reused in the commit message.

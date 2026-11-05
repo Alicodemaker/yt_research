@@ -4,6 +4,19 @@ description: Ask the agent to zoom out a level and map the relevant modules and 
 disable-model-invocation: true
 ---
 
-<!-- Vendored from mattpocock/skills at commit e112a6b^ (skills/engineering/zoom-out/SKILL.md). The skill was removed upstream, so it is kept here as-is. Read-only: it changes nothing. -->
+<!-- Vendored from mattpocock/skills at commit e112a6b^ (skills/engineering/zoom-out/SKILL.md). The skill was removed upstream, so it is kept here, with project sections added below. Read-only: it changes nothing. -->
 
 I don't know this area of code well. Go up a layer of abstraction. Give me a map of all the relevant modules and callers, using the project's domain glossary vocabulary.
+
+## When to use
+
+- The user wants to understand an area of code before changing it. Read-only.
+
+**Don't use for:** "…and fix it" or "clean it up". Hand off to `/fstack-simplify` or `improve-codebase-architecture` instead.
+
+## Output template
+
+1. **Modules**: one line each, saying what it does.
+2. **Callers**: who calls what.
+3. **Flow**: input → scripts → JSON output.
+4. **Terms**: domain words from `GLOSSARY.md`. Skip it if there's no `GLOSSARY.md`.
