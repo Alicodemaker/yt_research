@@ -22,6 +22,7 @@ This is the only rules file for this repo. `CLAUDE.md` points here, and rules mu
 - **JSON only on stdout.** Success prints JSON and exits 0. Failure prints `{"error": {"code", "message", "hint"}}` and exits 1. Never print a traceback.
 - **Stay inside the free tiers.** Never call the YouTube `search` endpoint (100 units).
 - **Existing captions only.** Supadata must only fetch a video's existing captions (`mode=native`), never AI-generate a transcript. This applies to every route: these scripts, a Supadata connector or direct API calls. Don't use or offer `--ai-transcript` or Supadata's `auto` / `generate` modes unless the user explicitly asks for an AI-generated transcript.
+- **Notion: new videos go to the inbox toggles.** When adding YouTube videos to the user's "build with ai" Notion page, put videos with a transcript in `🆕 new yt vids` and title-only videos in `⏳ new yt vids (no transcript)`. Never add them straight into the `yt vids` toggle: the page's own workflow files them from there and logs them in the guide changelog.
 - **Secrets.** Never commit API keys. They come from `YT_API_KEY`, `SUPADATA_API_KEY` and optionally `YT_PROXY`.
 - **Tests run offline.** `pytest` uses saved sample responses and never touches the network.
 - **Small commits.** Make one logical change per commit, with a plain one-line message. Push often.
