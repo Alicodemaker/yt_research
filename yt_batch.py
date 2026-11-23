@@ -1,4 +1,4 @@
-import random, re, sys, time
+import os, random, re, subprocess, sys, time
 from pathlib import Path
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -46,11 +46,28 @@ VIDEOS = [
     ('ia8xgSqqQ_0', 'Claude Skills for Designers (Ban AI Slop Forever)'),
 ]
 
-OUT = Path.home() / 'yt_transcripts'   # C:\Users\<you>\yt_transcripts
-LANGS = ['en', 'da']                     # caption languages, in order of preference
-WAIT = (15, 30)                          # seconds to wait between videos (random in this range)
+LANGS = ['en', 'da']   # caption languages, in order of preference
+WAIT = (30, 45)        # seconds between videos (random in this range): your time to paste into Notion
 
-OUT.mkdir(exist_ok=True)
+
+def desktop():
+    """The real Desktop folder, also when OneDrive has moved it."""
+    try:
+        import winreg
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                             r'Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders')
+        return Path(os.path.expandvars(winreg.QueryValueEx(key, 'Desktop')[0]))
+    except (ImportError, OSError):
+        return Path.home() / 'Desktop'
+
+
+def copy_to_clipboard(text):
+    # UTF-16 keeps characters like ’ and é intact
+    subprocess.run('clip', input=text.encode('utf-16'), check=True)
+
+
+OUT = desktop() / 'yt_transcripts'
+OUT.mkdir(parents=True, exist_ok=True)
 api = YouTubeTranscriptApi()
 done = skipped = failed = 0
 
@@ -63,8 +80,9 @@ for n, (vid, title) in enumerate(VIDEOS, 1):
     print(f'[{n}/{len(VIDEOS)}] {title} ... ', end='', flush=True)
     try:
         text = ' '.join(p.text for p in api.fetch(vid, languages=LANGS))
-        path.write_text(f'{title}\nhttps://www.youtube.com/watch?v={vid}\n\n{text}\n', encoding='utf-8')
-        print(f'saved ({len(text.split())} words)')
+        path.write_text(text, encoding='utf-8')
+        copy_to_clipboard(text)
+        print(f'saved + copied ({len(text.split())} words): paste it into Notion now')
         done += 1
     except Exception as e:
         kind = type(e).__name__
