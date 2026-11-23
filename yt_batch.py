@@ -1,4 +1,9 @@
 import os, re, subprocess, sys, time
+
+try:
+    import msvcrt   # Windows keyboard access, for the P = pause key
+except ImportError:
+    msvcrt = None
 from pathlib import Path
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -61,6 +66,28 @@ def desktop():
         return Path.home() / 'Desktop'
 
 
+def p_pressed():
+    """True if P was pressed since the last check (other keys are ignored)."""
+    pressed = False
+    while msvcrt and msvcrt.kbhit():
+        if msvcrt.getwch().lower() == 'p':
+            pressed = True
+    return pressed
+
+
+def wait(seconds):
+    """Wait between videos. P pauses, P again continues."""
+    end = time.time() + seconds
+    while time.time() < end:
+        if p_pressed():
+            print('  Paused. Press P to continue.', flush=True)
+            while not p_pressed():
+                time.sleep(0.1)
+            print('  Continuing.', flush=True)
+            end = time.time() + seconds   # full wait again, so you can finish pasting
+        time.sleep(0.1)
+
+
 def copy_to_clipboard(text):
     # UTF-16 keeps characters like ’ and é intact
     subprocess.run('clip', input=text.encode('utf-16'), check=True)
@@ -68,6 +95,7 @@ def copy_to_clipboard(text):
 
 OUT = desktop() / 'yt_transcripts'
 OUT.mkdir(parents=True, exist_ok=True)
+print('Tip: press P to pause, and P again to continue.\n')
 api = YouTubeTranscriptApi()
 done = skipped = failed = 0
 
@@ -92,6 +120,6 @@ for n, (vid, title) in enumerate(VIDEOS, 1):
                   ' finished videos are skipped.')
             break
         failed += 1   # e.g. no captions: move on to the next video
-    time.sleep(WAIT)
+    wait(WAIT)
 
 print(f'\nDone: {done} saved, {skipped} already there, {failed} without captions. Files are in {OUT}')
