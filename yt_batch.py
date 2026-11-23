@@ -73,8 +73,8 @@ done = skipped = failed = 0
 
 for n, (vid, title) in enumerate(VIDEOS, 1):
     name = re.sub(r'[<>:"/\\|?*]', '', title).strip()[:80]
-    path = OUT / f'{name}.txt'   # by title, so videos from an earlier batch are skipped
-    if path.exists():
+    path = OUT / f'{n:02d} {name}.txt'
+    if any(f.name[3:] == f'{name}.txt' for f in OUT.glob('*.txt')):   # fetched in this or an earlier batch
         skipped += 1
         continue
     print(f'[{n}/{len(VIDEOS)}] {title} ... ', end='', flush=True)
