@@ -1,4 +1,4 @@
-import os, random, re, subprocess, sys, time
+import os, re, subprocess, sys, time
 from pathlib import Path
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -47,7 +47,7 @@ VIDEOS = [
 ]
 
 LANGS = ['en', 'da']   # caption languages, in order of preference
-WAIT = (30, 45)        # seconds between videos (random in this range): your time to paste into Notion
+WAIT = 15             # seconds between videos: your time to paste into Notion
 
 
 def desktop():
@@ -92,6 +92,6 @@ for n, (vid, title) in enumerate(VIDEOS, 1):
                   ' finished videos are skipped.')
             break
         failed += 1   # e.g. no captions: move on to the next video
-    time.sleep(random.uniform(*WAIT))
+    time.sleep(WAIT)
 
 print(f'\nDone: {done} saved, {skipped} already there, {failed} without captions. Files are in {OUT}')
