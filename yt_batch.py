@@ -47,7 +47,7 @@ VIDEOS = [
 ]
 
 LANGS = ['en', 'da']   # caption languages, in order of preference
-WAIT = 15             # seconds between videos: your time to paste into Notion
+WAIT = 10             # seconds between videos: your time to paste into Notion
 
 
 def desktop():
