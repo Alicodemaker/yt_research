@@ -1,4 +1,9 @@
-import os, re, subprocess, sys, time
+import os, random, re, subprocess, sys, time
+
+try:
+    import msvcrt   # Windows keyboard access, for the P = pause key
+except ImportError:
+    msvcrt = None
 from pathlib import Path
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -47,7 +52,9 @@ VIDEOS = [
 ]
 
 LANGS = ['en', 'da']   # caption languages, in order of preference
-WAIT = 10             # seconds between videos: your time to paste into Notion
+WAIT = (20, 30)        # seconds between videos, random in this range: looks less like a bot
+BREAK_EVERY = 20       # after this many videos fetched...
+BREAK = 60             # ...take a break of this many seconds
 
 
 def desktop():
@@ -61,6 +68,28 @@ def desktop():
         return Path.home() / 'Desktop'
 
 
+def p_pressed():
+    """True if P was pressed since the last check (other keys are ignored)."""
+    pressed = False
+    while msvcrt and msvcrt.kbhit():
+        if msvcrt.getwch().lower() == 'p':
+            pressed = True
+    return pressed
+
+
+def wait(seconds):
+    """Wait between videos. P pauses, P again continues."""
+    end = time.time() + seconds
+    while time.time() < end:
+        if p_pressed():
+            print('  Paused. Press P to continue.', flush=True)
+            while not p_pressed():
+                time.sleep(0.1)
+            print('  Continuing.', flush=True)
+            end = time.time() + seconds   # full wait again, so you can finish pasting
+        time.sleep(0.1)
+
+
 def copy_to_clipboard(text):
     # UTF-16 keeps characters like ’ and é intact
     subprocess.run('clip', input=text.encode('utf-16'), check=True)
@@ -68,8 +97,10 @@ def copy_to_clipboard(text):
 
 OUT = desktop() / 'yt_transcripts'
 OUT.mkdir(parents=True, exist_ok=True)
+print('Tip: press P to pause, and P again to continue.\n')
 api = YouTubeTranscriptApi()
 done = skipped = failed = 0
+fetched = 0   # videos actually requested from YouTube (skipped ones don't count)
 
 for n, (vid, title) in enumerate(VIDEOS, 1):
     name = re.sub(r'[<>:"/\\|?*]', '', title).strip()[:80]
@@ -78,6 +109,7 @@ for n, (vid, title) in enumerate(VIDEOS, 1):
         skipped += 1
         continue
     print(f'[{n}/{len(VIDEOS)}] {title} ... ', end='', flush=True)
+    fetched += 1
     try:
         text = ' '.join(p.text for p in api.fetch(vid, languages=LANGS))
         path.write_text(text, encoding='utf-8')
@@ -92,6 +124,10 @@ for n, (vid, title) in enumerate(VIDEOS, 1):
                   ' finished videos are skipped.')
             break
         failed += 1   # e.g. no captions: move on to the next video
-    time.sleep(WAIT)
+    if fetched % BREAK_EVERY == 0:
+        print(f'  {BREAK_EVERY} videos done: taking a {BREAK} second break.', flush=True)
+        wait(BREAK)
+    else:
+        wait(random.uniform(*WAIT))
 
 print(f'\nDone: {done} saved, {skipped} already there, {failed} without captions. Files are in {OUT}')
