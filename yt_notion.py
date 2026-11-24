@@ -4,6 +4,7 @@ Start it, copy videos with the "Copy YouTube Transcript" Chrome extension (it co
 "Title: ...", "URL: ...", a blank line, then the transcript), and each one is filed as a
 database page with Status "New". Press Q (or close the window) to stop.
 
+    Double-click yt_notion.py on the Desktop, or run:
     python "%USERPROFILE%\\Desktop\\yt_notion.py"
 
 Needs the NOTION_TOKEN environment variable (your Notion integration's secret), and the
@@ -214,4 +215,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit as e:   # setup problems: show the message instead of closing at once
+        if e.code not in (None, 0):
+            print(e.code)
+    except KeyboardInterrupt:
+        print("\nStopped.")
+    except Exception as e:   # anything unexpected: show it, so a double-clicked window doesn't just vanish
+        print(f"\nUnexpected error: {e!r}")
+    input("\nPress Enter to close this window.")
