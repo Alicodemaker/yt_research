@@ -50,14 +50,14 @@ def parse(text):
     return re.sub(r"\s+", " ", title.group(1)), f"https://www.youtube.com/watch?v={vid}", transcript
 
 
-def code_blocks(transcript):
-    """The transcript as Notion code blocks, split to fit Notion's size limits."""
+def text_blocks(transcript):
+    """The transcript as Notion text blocks, split to fit Notion's size limits."""
     pieces = [transcript[i:i + CHUNK] for i in range(0, len(transcript), CHUNK)]
     blocks = []
     for i in range(0, len(pieces), PER_BLOCK):
         rich = [{"type": "text", "text": {"content": p}} for p in pieces[i:i + PER_BLOCK]]
-        blocks.append({"object": "block", "type": "code",
-                       "code": {"language": "plain text", "rich_text": rich}})
+        # plain text, not a code block: Notion's API has no "wrap code" setting, and text always wraps
+        blocks.append({"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich}})
     return blocks
 
 
@@ -75,7 +75,7 @@ def file_video(text, api):
         status = (page["properties"]["Status"]["select"] or {}).get("name")
         if status != "No transcript":
             return f"- Skipped, already in the database: {title}"
-        api("PATCH", f"/blocks/{page['id']}/children", {"children": code_blocks(transcript)})
+        api("PATCH", f"/blocks/{page['id']}/children", {"children": text_blocks(transcript)})
         api("PATCH", f"/pages/{page['id']}", {"properties": {"Status": {"select": {"name": "New"}}}})
         return f"✓ Transcript added: {title} ({words})"
     api("POST", "/pages", {
@@ -85,7 +85,7 @@ def file_video(text, api):
             "Link": {"url": url},
             "Status": {"select": {"name": "New"}},
         },
-        "children": code_blocks(transcript),
+        "children": text_blocks(transcript),
     })
     return f"✓ Added: {title} ({words})"
 
