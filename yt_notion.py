@@ -23,6 +23,7 @@ NOTION = "https://api.notion.com/v1"
 NOTION_VERSION = "2022-06-28"
 CHUNK = 2000       # Notion's limit for one piece of text
 PER_BLOCK = 100    # pieces per code block
+TAKE_FOCUS = False  # True: the window also takes the keyboard (then click back into Chrome to copy the next one)
 
 
 class NotionError(Exception):
@@ -142,6 +143,38 @@ def clipboard():
     return read, user32.GetClipboardSequenceNumber
 
 
+def window_raiser():
+    """A function that brings this script's window to the front (Windows only).
+
+    The window is the one in the foreground when the script starts: the one you typed the
+    command into. That works for both the classic console and Windows Terminal.
+    """
+    import ctypes
+    from ctypes import wintypes
+    user32 = ctypes.WinDLL("user32")
+    user32.GetForegroundWindow.restype = wintypes.HWND
+    user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND] + [ctypes.c_int] * 4 + [wintypes.UINT]
+    user32.IsIconic.argtypes = user32.SetForegroundWindow.argtypes = [wintypes.HWND]
+    user32.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
+    window = user32.GetForegroundWindow()
+    topmost, not_topmost = (wintypes.HWND(ctypes.c_size_t(n).value) for n in (-1, -2))
+    flags = 0x0001 | 0x0002 | 0x0010   # keep size, keep position, don't take the keyboard
+
+    def raise_window():
+        if not window:
+            return
+        if user32.IsIconic(window):
+            user32.ShowWindow(window, 4)   # un-minimise without taking the keyboard
+        user32.SetWindowPos(window, topmost, 0, 0, 0, 0, flags)       # jump above everything...
+        user32.SetWindowPos(window, not_topmost, 0, 0, 0, 0, flags)   # ...without staying stuck on top
+        if TAKE_FOCUS:
+            user32.keybd_event(0x12, 0, 0, 0)   # tap Alt: Windows only lets a window take focus after a key press
+            user32.keybd_event(0x12, 0, 2, 0)
+            user32.SetForegroundWindow(window)
+
+    return raise_window
+
+
 def main():
     try:
         import msvcrt
@@ -150,6 +183,7 @@ def main():
     if not os.environ.get("NOTION_TOKEN"):
         sys.exit("NOTION_TOKEN is not set. Run: setx NOTION_TOKEN \"your-secret\" and open a new Command Prompt.")
     read, sequence = clipboard()
+    raise_window = window_raiser()
     last = sequence()   # ignore whatever was copied before starting
     filed = 0
     print("Watching the clipboard. Copy videos with the extension. Press Q to stop.\n", flush=True)
@@ -163,14 +197,17 @@ def main():
                 message = file_video(text, api) if text else None
             except NotionError as e:
                 print(f"✗ {e}", flush=True)
+                raise_window()
                 if "NOTION_TOKEN" in str(e) or "not found" in str(e):
                     break
                 continue
             except OSError as e:   # network trouble: keep watching
                 print(f"✗ Could not reach Notion ({e}). Copy that video again in a moment.", flush=True)
+                raise_window()
                 continue
             if message:
                 print(message, flush=True)
+                raise_window()
                 filed += message.startswith("✓")
         time.sleep(0.3)
     print(f"\nFiled {filed} video{'s' if filed != 1 else ''}. Bye.")
