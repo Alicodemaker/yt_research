@@ -24,9 +24,9 @@ def test_ignores_other_clipboard_text():
 
 
 def test_splits_long_transcripts_to_fit_notion_limits():
-    blocks = yn.text_blocks("a" * (yn.CHUNK * 150 + 5))
-    assert [len(b["paragraph"]["rich_text"]) for b in blocks] == [100, 51]
-    assert "".join(p["text"]["content"] for b in blocks for p in b["paragraph"]["rich_text"]) == "a" * (yn.CHUNK * 150 + 5)
+    blocks = yn.code_blocks("a" * (yn.CHUNK * 150 + 5))
+    assert [len(b["code"]["rich_text"]) for b in blocks] == [100, 51]
+    assert "".join(p["text"]["content"] for b in blocks for p in b["code"]["rich_text"]) == "a" * (yn.CHUNK * 150 + 5)
 
 
 class FakeNotion:
