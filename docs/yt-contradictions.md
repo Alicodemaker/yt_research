@@ -247,5 +247,5 @@ Items marked ✅ above only need a guide edit, not research.
 
 ## F. Still to do
 - ✅ Done 2026-11-27: added 14 📚 Docs rows. Ten are Verified: Claude Code model config & caching, memory, skills, Code Mode; Anthropic prompting and long-running harness; Astro images; Google spam policies; Google Maps UGC policy; WCAG motion & hover. The MCP tool search row is Partly verified. Three are Search-checked: EU AI Act Art. 50, Claude Design, Cloudflare Web Analytics. Before those three can move to Verified, read the AI Act text on EUR-Lex, open the Claude Design Help Center article, and check the site's cookies in DevTools.
-- Update the Docs cookie row: add the Cloudflare Web Analytics quote, and note that the joint guidance (May 2025) is in the US-transfer row.
-- Nothing in Notion was changed. All 195 rows are still Status = New, and no guide edits were made from this review. Decide per item whether to edit the guide, then set the videos to Filed with one changelog line.
+- ✅ Done 2026-11-27: the Docs cookie row now has the Cloudflare Web Analytics quote and a pointer to the joint guidance (May 2025) in the US-transfer row. Its Status stays Partly verified until the DevTools check.
+- Apart from the Docs rows above, nothing in Notion was changed. All 195 video rows are still Status = New, and no guide edits were made from this review. Decide per item whether to edit the guide, then set the videos to Filed with one changelog line.
